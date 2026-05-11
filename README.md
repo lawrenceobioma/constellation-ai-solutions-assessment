@@ -1,117 +1,184 @@
-<div align="center">
-  <img src="constellationsoftware-icon.png" alt="Constellation" width="220" />
-  <br /><br />
-</div>
+# Constellation AI Solutions Analyst Assessment
 
-# AI Solutions Analyst — Technical Assessment
+This is a locally runnable React + Express + SQLite + Gemini implementation for the Constellation technical assessment.
 
-Please use the following repository as a template: [Constellation-Engineering/ai-tigers-technical](https://github.com/Constellation-Engineering/ai-tigers-technical)
+The app includes:
 
-Welcome to the Constellation AI Solutions Analyst technical assessment. We are excited to see your skills in action.
+- A React login page
+- Hardcoded credential validation in Express
+- JWT session management using an HttpOnly cookie
+- Protected API routes
+- SQLite `.db` file reading with no external database server
+- A scrollable table preview for all rows and columns
+- A Gemini-powered chat endpoint that converts natural language questions into SQL, validates the SQL, runs it against SQLite, and returns a readable answer
 
-This assessment is designed to evaluate a range of practical skills you will use day-to-day as an AI Solutions Analyst: authentication fundamentals, working with external APIs, basic prompt engineering, and the ability to ship functional software quickly. Everyone here leverages AI tooling to accelerate development — we expect you to do the same.
+## Tech Stack
 
-> **Note on UI/UX:** This project is judged purely on functionality. Do not spend time polishing the interface. We care about robust backend logic, correct data flow, and problem-solving ability.
+### Frontend
 
----
+- React
+- Vite
+- Plain CSS
 
-## The Task
+### Backend
 
-Build a locally-runnable web application in any language/framework of your choosing. The application must satisfy the following three areas of functionality.
+- Node.js
+- Express
+- sqlite3
+- jsonwebtoken
+- cookie-parser
+- @google/genai
 
----
+### Database
 
-## Features to Implement
+- SQLite file stored locally under `server/data/`
 
-### 1. Authentication
+## Requirements
 
-Implement a basic login screen with a simple hardcoded credential check. No real authentication infrastructure is expected (no password hashing, no user database, no OAuth, etc.). The login should accept **only** these exact credentials:
+Install:
 
-| Field    | Value                            |
-| -------- | -------------------------------- |
-| Email    | `example@helloconstellation.com` |
-| Password | `ConstellationInterview123!`     |
+- Node.js 18 or newer
+- npm
+- A Gemini API key from Google AI Studio
 
-- A plain string comparison against the hardcoded values above is sufficient.
-- On successful login, generate and store a **JWT token** to manage the session.
-- The authenticated user's name (e.g., "Example User") must be visible in the UI after login.
-- All routes beyond the login screen must be protected — unauthenticated requests should redirect to login.
+## Local Setup
 
----
+### 1. Install dependencies
 
-### 2. Data Table Preview
+From the project root:
 
-You will be provided with a `.db` file (SQLite) containing a dataset. Once authenticated, the user must be able to:
+```bash
+npm run install:all
+```
 
-- View the data in a **scrollable table** that previews all rows and columns.
-- The table must load the data directly from the provided `.db` file — no external database setup required.
+### 2. Create the backend environment file
 
----
+Copy the example environment file:
 
-### 3. AI-Powered Chat Interface
+```bash
+cp server/.env.example server/.env
+```
 
-Below the data table, implement a plain-English chat input. The user should be able to type a question about the data (e.g., *"How many records are from New York?"* or *"What is the average value in column X?"*) and receive a response.
+On Windows PowerShell:
 
-**Requirements:**
+```powershell
+Copy-Item server/.env.example server/.env
+```
 
-- Use the **Google Gemini API** as the underlying model. Your API key must be read from an environment variable — **do not hardcode or commit it**.
-- The AI agent must translate the user's natural language question into a SQL query, run it against the `.db` file, and return a clear, human-readable answer.
-- The parsing, querying, and response logic must be handled programmatically — no passing raw HTML or full table dumps to the model.
+Then edit `server/.env`:
 
----
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+SQLITE_DB_PATH=./data/provided.db
+```
 
-## Submission Requirements
+`server/.env` is not commited.
 
-Your submission consists of three parts:
+### 3. Add the provided SQLite database
 
-### (1) Infrastructure Writeup
+Place the assessment `.db` file here:
 
-In your README, provide a brief writeup (a few paragraphs is fine) covering:
+```text
+server/data/provided.db
+```
 
-- What technologies and libraries you chose and why.
-- How the authentication flow works end-to-end (login → JWT → protected routes).
-- How the AI chat pipeline works (user query → SQL generation → execution → response).
+`SQLITE_DB_PATH` is required in `server/.env` because the backend needs an explicit database location. If the file at that path does not exist, the server creates a small sample database so the app can still run locally. For the real submission, replace that sample file with the provided assessment `.db` file.
 
-### (2) Scale & Production Design
+### 4. Start the app
 
-In the same document, address the following (again, a few paragraphs is sufficient):
+From the project root:
 
-- If this application were deployed to support **hundreds of monthly active users**, what architectural changes would you make?
-- How would you handle **security** at scale (token management, secrets, rate limiting, etc.)?
-- What observability or monitoring would you add?
+```bash
+npm run dev
+```
 
-### (3) Public GitHub Repository
+Open:
 
-Use the **"Use this template"** button on this repository to create your own public repo, then build your solution there. Your repository must include:
+```text
+http://localhost:3000
+```
 
-- A new `README.md` (replacing this one) with clear instructions to run the project locally.
-- All required environment variables documented (names, purpose, and where to obtain them — but not the values themselves).
-- The hardcoded credentials listed above so the reviewer can log in without any additional setup.
-- A working application reachable at `localhost:3000` (or equivalent) after following your README.
+## Reviewer Login Credentials
 
-Submit the link to your repository when complete.
+```text
+Email: example@helloconstellation.com
+Password: ConstellationInterview123!
+```
 
----
+## How Authentication Works
 
-## Evaluation Criteria
+The React login form sends the email and password to the Express endpoint `POST /api/login`.
 
-| Area                        | What We Are Looking For                                                                 |
-| --------------------------- | --------------------------------------------------------------------------------------- |
-| Authentication & JWT        | Correct implementation of login flow and token-based session management                 |
-| Data Handling               | Ability to read from a SQLite file and surface data cleanly                             |
-| AI Integration              | Structured prompting, SQL generation, and clean response formatting via Gemini          |
-| Code Quality & Organization | Readable, organized code — not perfect, but maintainable                                |
-| Version Control             | Meaningful commits, clean repo structure                                                |
-| Documentation               | Clear README, infrastructure writeup, and scale discussion                              |
+Express compares those values against the required hardcoded credentials. If the values match, Express creates a JWT containing the user's name and email. The JWT is signed with a temporary startup secret generated by the server and stored in an HttpOnly cookie named `token`.
 
----
+Protected backend routes use the `requireAuth` middleware. That middleware reads the cookie, verifies the JWT, and allows the request to continue only when the token is valid. If the token is missing, invalid, or expired, the API returns `401`.
+
+React calls `GET /api/me` when the app loads. If the user is authenticated, React shows the dashboard. If not, React shows the login page.
+
+## How the SQLite Table Preview Works
+
+After login, React calls `GET /api/table`.
+
+The backend opens the SQLite `.db` file directly from `server/data/provided.db`, finds the first user-created table, reads its column names, and returns all rows and columns as JSON.
+
+React renders those rows inside a scrollable table with sticky column headers.
+
+## How the AI Chat Pipeline Works
+
+The chat form sends a question to `POST /api/chat`.
+
+The backend then:
+
+1. Reads the SQLite schema programmatically.
+2. Sends only the schema and user question to Gemini.
+3. Asks Gemini to return a JSON object containing one SQLite `SELECT` query.
+4. Validates that the SQL is read-only and contains only one statement.
+5. Runs the SQL against the local SQLite database.
+6. Sends the query result back to Gemini for a short human-readable answer.
+7. Returns the answer, generated SQL, row count, and a small row preview to React.
+
+The full table is not dumped into Gemini. Only schema and query results are sent.
+
+## Environment Variables
+
+Only two environment variables are required for local setup:
+
+| Name             | Purpose
+|------------------|------------------------
+| `GEMINI_API_KEY` | Google Gemini API key.
+| `SQLITE_DB_PATH` | Required path to the SQLite `.db` file relative to the `server` folder.
+
+The app uses fixed local ports: React on `localhost:3000` and Express on `localhost:5000`.
+
+The JWT signing secret is generated automatically by the server at startup. This keeps local setup simple. Existing login sessions reset when the backend restarts, which, I believe, is acceptable for this local assessment.
+
+## Scale and Production Design
+
+For hundreds of monthly active users, I would separate the frontend and backend more formally. The React app could be deployed as static assets, while the Express API could run behind a managed hosting service or container platform. SQLite is acceptable for this local assessment, but for production I would likely move the data to Postgres or another managed relational database if multiple users need concurrent access, auditing, or updates.
+
+For security, I would move the hardcoded login into a real user store with hashed passwords, shorter-lived access tokens, optional refresh tokens, stronger cookie settings, CSRF protection, request validation, and rate limiting on login and chat endpoints. Secrets would be stored in a managed secrets system rather than `.env` files.
+
+For observability, I would add structured request logs, error tracking, latency metrics, Gemini usage tracking, SQL failure logging, and alerts for repeated authentication failures or high API costs. I would also log generated SQL separately from user identity so debugging is possible without exposing unnecessary personal data.
+
+## Useful API Routes
+
+| Route           | Method  | Auth Required  | Purpose
+|-----------------|---------|----------------|----------------
+| `/api/health`   | GET     | No  | Basic server health check.
+| `/api/login`    | POST    | No  | Validates hardcoded credentials and creates JWT cookie.
+| `/api/logout`   | POST    | No  | Clears JWT cookie.
+| `/api/me`       | GET     | Yes | Returns authenticated user.
+| `/api/table`    | GET     | Yes | Returns table name, columns, and rows from SQLite.
+| `/api/chat`     | POST    | Yes | Runs Gemini SQL chat pipeline.
 
 ## Notes
 
-- **AI use is not only allowed, but strongly encouraged.** A large part of this role is the ability to leverage tools like Cursor, GitHub Copilot, and AI agents to ship quickly. This project would take significantly longer than necessary without them.
-- Do not worry about deploying the application — local execution is sufficient.
-- If you have any questions about the requirements, use your best judgment and document your assumptions.
+The UI is intentionally simple because the assessment prioritizes functional backend logic, correct data flow, and maintainable code over visual polish.
 
----
+### If npm tries to use an internal registry
 
-*Good luck — we look forward to reviewing your solution.*
+This project includes `.npmrc` files that force npm to use the public npm registry:
+
+```bash
+https://registry.npmjs.org/
+```

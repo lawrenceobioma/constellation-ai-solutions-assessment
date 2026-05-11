@@ -1,0 +1,17 @@
+node_modules/
+server/node_modules/
+client/node_modules/
+
+.env
+server/.env
+client/.env
+
+dist/
+client/dist/
+
+.DS_Store
+npm-debug.log*
+*.log
+
+server/data/*.db
+!server/data/.gitkeep
