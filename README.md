@@ -82,7 +82,7 @@ Place the assessment `.db` file here:
 server/data/provided.db
 ```
 
-`SQLITE_DB_PATH` is required in `server/.env` because the backend needs an explicit database location. If the file at that path does not exist, the server creates a small sample database so the app can still run locally. For the real submission, replace that sample file with the provided assessment `.db` file.
+`SQLITE_DB_PATH` is required in `server/.env` because the backend needs an explicit database location. If the file at that path does not exist, the server creates a small sample database so the app can still run locally.
 
 ### 4. Start the app
 
